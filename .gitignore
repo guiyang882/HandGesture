@@ -1,0 +1,3 @@
+images/*
+!images/README.md
+HandGesture.pro.user
