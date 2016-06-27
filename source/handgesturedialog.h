@@ -36,17 +36,27 @@ private slots:
     void on_comboBox_ShowDelay_activated(int index);
     void on_comboBox_ImageMode_activated(int index);
 
+public:
+    bool IplImage2QImage(IplImage* src, QImage& dest);
+    bool QImage2IplImage(QImage& src, IplImage& dest);
+    bool cvtImageShowMode(IplImage* src, IplImage* dest);
+
 private:
     Ui::HandGestureDialog *ui;
     CAIGesture gesture;
     int isRun;
+
     /**CAMERA PARAMETER**/
     CvCapture *cam;
     IplImage  *frame;
     IplImage* afterSkin;
+
+    /*Basic Control Setting*/
     QTimer    *timer;
     int time_intervals;
-    QImage    *imag;
+
+    // save current snap image
+    IplImage* p_CurSnapImg;
 
     /**gesture Recongnisize**/
     string gesturename;
@@ -62,7 +72,10 @@ private:
     string com_result;
     MyRect rect;
     IplImage* src_tmp[8];
-    enum Switch {Nothing,Recongnise,CommandGesture,Locate}status_switch;
+
+public:
+    enum Switch { Nothing,Recongnise,CommandGesture,Locate } status_switch;
+    enum ImageShowMode {ISM_RGB, ISM_HSV, ISM_YCBCR, ISM_YUV} m_imgShowMode;
 };
 
 #endif // HANDGESTUREDIALOG_H

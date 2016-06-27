@@ -6,6 +6,8 @@
 
 QT       += core gui
 
+CONFIG += warn_off
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = HandGesture
@@ -30,4 +32,7 @@ LIBS += -L/usr/local/Cellar/opencv/2.4.13/lib \
         -lopencv_highgui -lopencv_imgproc \
         -lopencv_ml -lopencv_video -lopencv_contrib \
         -lopencv_ml -lopencv_objdetect
+
+DISTFILES += \
+    README.md
 

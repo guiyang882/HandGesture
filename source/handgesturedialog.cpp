@@ -10,10 +10,11 @@ HandGestureDialog::HandGestureDialog(QWidget *parent) :
 
     cam = NULL;
     frame = NULL;
+    p_CurSnapImg = NULL;
+
     isRun = 1;
     time_intervals = 100;
     timer = new QTimer(this);
-    imag = new QImage();
     gesturecount = 0;
     status_switch = Nothing;
     pt = NULL;
@@ -94,22 +95,20 @@ void HandGestureDialog::StartRecongizeHand (IplImage *img)
     cvWaitKey (30);
 }
 
-void HandGestureDialog::readFarme()
-{
+void HandGestureDialog::readFarme() {
     frame = cvQueryFrame(cam);
-    QImage image((const uchar*)frame->imageData,
-                 frame->width,
-                 frame->height,
-                 QImage::Format_RGB888);
-    image = image.rgbSwapped();
-    image = image.scaled(320,240);
+
+    IplImage* pTmp = cvCloneImage(frame);
+    cvtImageShowMode(frame, pTmp);
+    QImage image;
+    IplImage2QImage(pTmp, image);
+    cvReleaseImage(&pTmp);
+
+    image = image.scaled(480,320);
     ui->label_CameraShow->setPixmap(QPixmap::fromImage(image));
     gesture.SkinDetect (frame,afterSkin);
 
-    /*next to opencv*/
-
-    if(status_switch == Recongnise)
-    {
+    if(status_switch == Recongnise) {
         // Flips the frame into mirror image
         cvFlip(frame,frame,1);
 
@@ -118,8 +117,7 @@ void HandGestureDialog::readFarme()
     }
 }
 
-void HandGestureDialog::on_pushButton_OpenCamera_clicked()
-{
+void HandGestureDialog::on_pushButton_OpenCamera_clicked() {
     cam = cvCreateCameraCapture(0);
     timer->start(time_intervals);
     frame = cvQueryFrame(cam);
@@ -131,16 +129,14 @@ void HandGestureDialog::on_pushButton_OpenCamera_clicked()
     afterSkin = cvCreateImage (cvSize(frame->width,frame->height),IPL_DEPTH_8U,1);
 }
 
-void HandGestureDialog::on_pushButton_SnapImage_clicked()
-{
-    if(frame != NULL)
-    {
-        QImage image((const uchar*)frame->imageData,
-                     frame->width,
-                     frame->height,
-                     QImage::Format_RGB888);
-        image = image.rgbSwapped();
-        image = image.scaled(160,120);
+void HandGestureDialog::on_pushButton_SnapImage_clicked() {
+    if(frame != NULL) {
+        p_CurSnapImg = cvCloneImage(frame);
+        cvtImageShowMode(frame, p_CurSnapImg);
+        QImage image;
+        IplImage2QImage(p_CurSnapImg, image);
+
+        image = image.scaled(200, 115);
         ui->label_ShowSnap->setPixmap(QPixmap::fromImage(image));
     }
 }
@@ -209,7 +205,68 @@ void HandGestureDialog::on_comboBox_ShowDelay_activated(int index)
     }
 }
 
-void HandGestureDialog::on_comboBox_ImageMode_activated(int index)
-{
+void HandGestureDialog::on_comboBox_ImageMode_activated(int index) {
     /*some kind image to convert*/
+    if(index == 0) {
+        m_imgShowMode = ISM_RGB;
+    }
+    if(index == 1) {
+        m_imgShowMode = ISM_HSV;
+    }
+    if(index == 2) {
+        m_imgShowMode = ISM_YCBCR;
+    }
+    if(index == 3) {
+        m_imgShowMode == ISM_YUV;
+    }
+}
+
+bool HandGestureDialog::IplImage2QImage(IplImage *src, QImage &dest) {
+    switch(src->depth) {
+    case IPL_DEPTH_8U:
+        if(src->nChannels == 1 || src->nChannels == 4) {
+            dest = QImage((const uchar*)src->imageData, src->width, src->height, QImage::Format_ARGB32);
+        } else if(src->nChannels == 3) {
+            uchar newData[src->width*src->height*4*sizeof(uchar)];
+            const uchar* imgData = (const uchar*) src->imageData;
+            int k=0;
+            for(int row=0;row<src->height;++row) {
+                for(int col=0;col<src->width;++col) {
+                    newData[k++] = imgData[0];
+                    newData[k++] = imgData[1];
+                    newData[k++] = imgData[2];
+                    newData[k++] = 0;
+                    imgData += 3;
+                }
+                imgData += (src->widthStep - 3 * src->width);
+            }
+
+            dest = QImage(newData, src->width, src->height, QImage::Format_RGB32);
+        }
+        return true;
+    }
+    return false;
+}
+
+bool HandGestureDialog::QImage2IplImage(QImage &src, IplImage &dest) {
+    return false;
+}
+
+bool HandGestureDialog::cvtImageShowMode(IplImage *src, IplImage *dest) {
+    switch(m_imgShowMode) {
+    case ISM_RGB:
+        //cvCvtColor(src, dest, CV_BGR2RGB);
+        break;
+    case ISM_HSV:
+        cvCvtColor(src, dest, CV_BGR2HSV);
+        break;
+    case ISM_YCBCR:
+        cvCvtColor(src, dest, CV_BGR2YCrCb);
+        break;
+    case ISM_YUV:
+        cvCvtColor(src, dest, CV_BGR2YUV);
+        break;
+    default:
+        cout << "No Such ISM_Mode !" << endl;
+    }
 }
