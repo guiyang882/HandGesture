@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <iostream>
 #include <QTimer>
+#include <QTextCodec>
 
 #include "gesture/GestureStruct.h"
 #include "gesture/AIGesture.h"

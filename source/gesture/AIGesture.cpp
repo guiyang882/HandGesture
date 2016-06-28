@@ -5,6 +5,8 @@
 #include <math.h>
 #include <cmath>
 
+extern map<string, string> g_ConfigMap;
+extern map<string, vector<string>> g_TargetMap;
 
 CAIGesture::CAIGesture()
 {
@@ -324,8 +326,8 @@ float count[FeatureNum])
     }
 }
 
-void CAIGesture::OneGestureTrain(QDir GestureDir,CvFileStorage *fs,GestureStruct gesture)//对单张图片进行训练
-{	
+//对单张图片进行训练
+void CAIGesture::OneGestureTrain(QDir GestureDir,CvFileStorage *fs,GestureStruct gesture) {
     IplImage* TrainImage=0;
     IplImage* dst=0;
     CvSeq* contour=NULL;
@@ -337,19 +339,15 @@ void CAIGesture::OneGestureTrain(QDir GestureDir,CvFileStorage *fs,GestureStruct
     float count[FeatureNum]={0},countsum[FeatureNum]={0};
 
     int FileCount=0;
-    /*读取该目录下的所有jpg文件*/
     QFileInfoList list = GestureDir.entryInfoList();
     QString currentDirPath = GestureDir.absolutePath ();
     currentDirPath += "/";
-    for(int k=2;k<list.size ();k++)
-    {
+    for(int k=2;k<list.size ();k++) {
         QFileInfo tempInfo = list.at (k);
-        if(tempInfo.isFile () == true)
-        {
+        if(tempInfo.isFile () == true) {
             QString fileNamePath = currentDirPath + tempInfo.fileName ();
             TrainImage=cvLoadImage(fileNamePath.toStdString ().c_str(),1);
-            if(TrainImage==NULL)
-            {
+            if(TrainImage==NULL) {
                 cout << "can't load image" << endl;
                 cvReleaseMemStorage(&storage);
                 cvReleaseImage(&dst);
@@ -365,11 +363,9 @@ void CAIGesture::OneGestureTrain(QDir GestureDir,CvFileStorage *fs,GestureStruct
             ComputeCenter(contour,center,radius);
 
             GetFeature(dst,center,radius,angle,anglecha,count);
-            for(int j=0;j<FeatureNum;j++)
-            {
+            for(int j=0;j<FeatureNum;j++) {
                 countsum[j]+=count[j];
-                for(int k=0;k<10;k++)
-                {
+                for(int k=0;k<10;k++) {
                     anglesum[j][k]+=angle[j][k];
                     anglechasum[j][k]+=anglecha[j][k];
                 }
@@ -378,25 +374,22 @@ void CAIGesture::OneGestureTrain(QDir GestureDir,CvFileStorage *fs,GestureStruct
             cvReleaseImage(&TrainImage);
         }
     }
-    for(int i=0;i<FeatureNum;i++)
-    {
+    for(int i=0;i<FeatureNum;i++) {
         gesture.count[i]=countsum[i]/FileCount;
-        for(int j=0;j<10;j++)
-        {
+        for(int j=0;j<10;j++) {
             gesture.angle[i][j]=anglesum[i][j]/FileCount;
             gesture.anglecha[i][j]=anglechasum[i][j]/FileCount;
         }
     }
     cvStartWriteStruct(fs,gesture.angleName.c_str (),CV_NODE_SEQ,NULL);//开始写入yml文件
 
-    int i=0;
-    for(i=0;i<FeatureNum;i++)
+    for(int i=0;i<FeatureNum;i++)
         cvWriteRawData(fs,&gesture.angle[i][0],10,"f");//写入肤色角度的值
 
     cvEndWriteStruct(fs);
     cvStartWriteStruct(fs,gesture.anglechaName.c_str (),CV_NODE_SEQ,NULL);
 
-    for(i=0;i<FeatureNum;i++)
+    for(int i=0;i<FeatureNum;i++)
         cvWriteRawData(fs,&gesture.anglecha[i][0],10,"f");//写入非肤色角度的值
 
     cvEndWriteStruct(fs);
@@ -410,51 +403,28 @@ void CAIGesture::OneGestureTrain(QDir GestureDir,CvFileStorage *fs,GestureStruct
 
 //对指定训练文件夹里面的所有手势进行训练
 void CAIGesture::Train(QProgressDialog *pBar) {
-    QString curStr = QDir::currentPath ();
-    QString fp1 = "InfoDoc/gestureFeatureFile.yml";
-    fp1 = curStr + "/" + fp1;
-    CvFileStorage *GestureFeature=cvOpenFileStorage(fp1.toStdString ().c_str (),0,CV_STORAGE_WRITE);
-    FILE* fp;
-    QString fp2 = "InfoDoc/gestureFile.txt";
-    fp2 = curStr + "/" + fp2;
-    fp=fopen(fp2.toStdString ().c_str (),"w");
-    int FolderCount=0;
+    string fp1 = g_ConfigMap["ROOTDIR"] + g_ConfigMap["GESTUREFILE"];
+    CvFileStorage *GestureFeature=cvOpenFileStorage(fp1.c_str (),0,CV_STORAGE_WRITE);
 
-    /*获取当前的目录，然后得到当前的子目录*/
-    QString trainStr = curStr;
-    trainStr += "/TraningSample/";
-    QDir trainDir(trainStr);
     GestureStruct gesture;
-    QFileInfoList list = trainDir.entryInfoList();
+    vector<string> target = g_TargetMap["NUMFLAGS"];
+    pBar->setRange(0, target.size());
 
-    pBar->setRange(0,list.size ()-2);
+    for(int i=0;i<target.size ();++i) {
+        pBar->setValue(i+1);
 
+        gesture.angleName = target[i] + "angleName";
+        gesture.anglechaName = target[i] + "anglechaName";
+        gesture.countName = target[i] + "anglecountName";
 
-    for(int i=2;i<list.size ();i++)
-    {
-        pBar->setValue(i-1);
-
-        QFileInfo fileInfo = list.at (i);
-        if(fileInfo.isDir () == true)
-        {
-            FolderCount++;
-
-            QString tempStr = fileInfo.fileName ();
-            fprintf(fp,"%s\n",tempStr.toStdString ().c_str ());
-            gesture.angleName = tempStr.toStdString ()+"angleName";
-            gesture.anglechaName = tempStr.toStdString ()+"anglechaName";
-            gesture.countName = tempStr.toStdString ()+"anglecountName";
-
-            tempStr = trainStr + tempStr + "/";
-            QDir subDir(tempStr);
-            OneGestureTrain(subDir,GestureFeature,gesture);
-        }
+        string targetdir = g_ConfigMap["ROOTDIR"] + g_ConfigMap["NUMSDIR"] + target[i];
+        cout << targetdir << endl;
+        QString filePathInfo = QString::fromStdString(targetdir);
+        QDir subDir(filePathInfo);
+        OneGestureTrain(subDir,GestureFeature,gesture);
     }
+
     pBar->autoClose ();
-    delete pBar;
-    pBar = NULL;
-    fprintf(fp,"%s%d","Hand Gesture Number: ",FolderCount);
-    fclose(fp);
     cvReleaseFileStorage(&GestureFeature);
 }
 

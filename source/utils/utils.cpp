@@ -38,7 +38,7 @@ bool isExistsFile(string filePath) {
     return false;
 }
 
-void read_config_Json(string fileName, map<string, string> &argvMap) {
+void read_config_Json(string fileName, map<string, string> &argvMap, map<string, vector<string>> &argvMap2) {
     Json::Reader reader;
     Json::Value root;
     ifstream in;
@@ -52,44 +52,40 @@ void read_config_Json(string fileName, map<string, string> &argvMap) {
         throw runtime_error("Configure Json File Format Error !");
         cerr << "Configure Json File Format Error !" << endl;
     }
-    argvMap["SERVERIP"] = root.get("SERVERIP", "127.0.0.1").asString();
-    argvMap["PORT"] = root.get("PORT", "9999").asString();
-    argvMap["SERIALIZETIME"] = root.get("SERIALIZETIME", "3600").asString();
+    argvMap["ROOTDIR"] = root.get("ROOTDIR", "NULL").asString();
     argvMap["LOGPATH"] = root.get("LOGPATH", "NULL").asString();
 
-    if(root.isMember("FUSION") == true) {
-        argvMap["FUSIONISUSE"] = root["FUSION"].get("ISUSE", "FALSE").asString();
-        argvMap["FUSIONIDENTITY"] = root["FUSION"].get("FUSIONIDENTITY", "NULL").asString();
-        argvMap["FUSIONSerializePath"] = root["FUSION"].get("FUSIONSerializePath", "NULL").asString();
-        argvMap["FUSIONSerializePathBak"] = root["FUSION"].get("FUSIONSerializePathBak", "NULL").asString();
+    if(root.isMember("SAMPLES") == true) {
+        argvMap["SAMPLES_ISUSE"] = root["SAMPLES"].get("ISUSE", "FALSE").asString();
+        if(argvMap["SAMPLES_ISUSE"] == "TRUE") {
+            argvMap["CONTROLDIR"] = root["SAMPLES"].get("CONTROLDIR", "NULL").asString();
+            argvMap["NUMSDIR"] = root["SAMPLES"].get("NUMSDIR", "NULL").asString();
+
+            Json::Value value_array_control = root["SAMPLES"]["CONTROLFLAGS"];
+            vector<string> tmp1;
+            for(int i=0;i<value_array_control.size();++i) {
+                //cout << value_array_control[i] << endl;
+                tmp1.push_back(value_array_control[i].asString());
+            }
+            argvMap2["CONTROLFLAGS"] = tmp1;
+
+            Json::Value value_array_nums = root["SAMPLES"]["NUMFLAGS"];
+            vector<string> tmp2;
+            for(int i=0;i<value_array_nums.size();++i) {
+                //cout << value_array_nums[i] << endl;
+                tmp2.push_back(value_array_nums[i].asString());
+            }
+            argvMap2["NUMFLAGS"] = tmp2;
+        }
     }
 
-    if(root.isMember("RETRIEVE") == true) {
-        argvMap["RETRIEVEISUSE"] = root["RETRIEVE"].get("ISUSE", "FALSE").asString();
-        argvMap["RETRIEVEIDENTITY"] = root["RETRIEVE"].get("RETRIEVEIDENTITY", "NULL").asString();
-        argvMap["RETRIEVEPG_NAME"] = root["RETRIEVE"].get("RETRIEVEPG_NAME", "NULL").asString();
+    if(root.isMember("FEATURES") == true) {
+        argvMap["FEATURES_ISUSE"] = root["FEATURES"].get("ISUSE", "FALSE").asString();
+        if(argvMap["FEATURES_ISUSE"] == "TRUE") {
+            argvMap["GESTUREFILE"] = root["FEATURES"].get("GESTUREFILE", "NULL").asString();
+            argvMap["HANDFILE"] = root["FEATURES"].get("HANDFILE", "NULL").asString();
 
-        argvMap["RETRIEVEPG_HOST"] = root["RETRIEVE"].get("RETRIEVEPG_HOST", "NULL").asString();
-        argvMap["RETRIEVEPG_PORT"] = root["RETRIEVE"].get("RETRIEVEPG_PORT", "NULL").asString();
-        argvMap["RETRIEVEPG_USER"] = root["RETRIEVE"].get("RETRIEVEPG_USER", "NULL").asString();
-        argvMap["RETRIEVEPG_PASSWD"] = root["RETRIEVE"].get("RETRIEVEPG_PASSWD", "NULL").asString();
-
-        argvMap["RETRIEVEREDIS_HOST"] = root["RETRIEVE"].get("RETRIEVEREDIS_HOST", "NULL").asString();
-        argvMap["RETRIEVEREDIS_PORT"] = root["RETRIEVE"].get("RETRIEVEREDIS_PORT", "NULL").asString();
-        argvMap["RETRIEVEREDIS_PASSWD"] = root["RETRIEVE"].get("RETRIEVEREDIS_PASSWD", "NULL").asString();
-
-        argvMap["RETRIEVESerializePath"] = root["RETRIEVE"].get("RETRIEVESerializePath", "NULL").asString();
-        argvMap["RETRIEVESerializePathBak"] = root["RETRIEVE"].get("RETRIEVESerializePathBak", "NULL").asString();
-       
-        argvMap["RETRIEVESPARSITY"] = root["RETRIEVE"].get("RETRIEVESPARSITY", "11").asString();
-        argvMap["RETRIEVEMINRESIDUAL"] = root["RETRIEVE"].get("RETRIEVEMINRESIDUAL", "1").asString();
-    }
-
-    if(root.isMember("QUALITY") == true) {
-        argvMap["QUALITYISUSE"] = root["QUALITY"].get("ISUSE", "FALSE").asString();
-        argvMap["QUALITYIDENTITY"] = root["QUALITY"].get("QUALITYIDENTITY", "NULL").asString();
-        argvMap["QUALTYSerializePath"] = root["QUALITY"].get("QUALTYSerializePath", "NULL").asString();
-        argvMap["QUALTYSerializePathBak"] = root["QUALITY"].get("QUALTYSerializePathBak", "NULL").asString();
+        }
     }
 
     for(map<string, string>::iterator it=argvMap.begin(); it!=argvMap.end(); it++) {
@@ -98,12 +94,6 @@ void read_config_Json(string fileName, map<string, string> &argvMap) {
             throw runtime_error("Configure Json File Parameter Error !");
         }
     }
-}
-
-string getPGConfInfo(const map<string, string> &argvMap) {
-    string str = "";
-    str = "dbname=" + argvMap.at("RETRIEVEPG_NAME") + " user=" + argvMap.at("RETRIEVEPG_USER") + " password=" + argvMap.at("RETRIEVEPG_PASSWD") + " host=" + argvMap.at("RETRIEVEPG_HOST") + " port=" + argvMap.at("RETRIEVEPG_PORT");
-    return str;
 }
 
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {

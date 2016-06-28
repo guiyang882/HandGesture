@@ -18,14 +18,6 @@
 using namespace std;
 using namespace Json;
 
-enum TASKSTATUS {
-    TASKINIT,
-    TASKRUNNING,
-    TASKCOMPELETE,
-    TASKERROR,
-    ARGERROR
-};
-
 enum FileMode {
     EXISTS,
     WRITEABLE,
@@ -48,8 +40,7 @@ typedef struct _TaskPackStruct {
 void checkFileInfo(string filePath, ResultStatus& status);
 bool isExistsFile(string filePath);
 
-void read_config_Json(string fileName, map<string, string>& argvMap);
-string getPGConfInfo(const map<string, string>& argvMap);
+void read_config_Json(string fileName, map<string, string>& argvMap, map<string, vector<string> > &argvMap2);
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems);
 std::vector<std::string> split(const std::string &s, char delim);
 

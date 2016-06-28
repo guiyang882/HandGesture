@@ -2,6 +2,9 @@
 #include "ui_handgesturedialog.h"
 #include <QProgressDialog>
 
+extern map<string, string> g_ConfigMap;
+extern map<string, vector<string>> g_TargetMap;
+
 HandGestureDialog::HandGestureDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::HandGestureDialog)
@@ -11,6 +14,7 @@ HandGestureDialog::HandGestureDialog(QWidget *parent) :
     cam = NULL;
     frame = NULL;
     p_CurSnapImg = NULL;
+    m_imgShowMode = ISM_RGB;
 
     isRun = 1;
     time_intervals = 100;
@@ -31,11 +35,11 @@ HandGestureDialog::~HandGestureDialog()
     delete ui;
 }
 
-void HandGestureDialog::StartRecongizeHand (IplImage *img)
-{
+void HandGestureDialog::StartRecongizeHand (IplImage *img) {
     // Create a string that contains the exact cascade name
     // Contains the trained classifer for detecting hand
-    const char *cascade_name="hand.xml";
+    string cascade_name_str = g_ConfigMap["ROOTDIR"] + g_ConfigMap["HANDFILE"];
+    const char *cascade_name= cascade_name_str.c_str();
     // Create memory for calculations
     static CvMemStorage* storage = 0;
     // Create a new Haar classifier
@@ -49,24 +53,16 @@ void HandGestureDialog::StartRecongizeHand (IplImage *img)
     // Load the HaarClassifierCascade
     cascade = (CvHaarClassifierCascade*)cvLoad( cascade_name, 0, 0, 0 );
     // Check whether the cascade has loaded successfully. Else report and error and quit
-    if( !cascade )
-    {
-        fprintf( stderr, "ERROR: Could not load classifier cascade\n" );
+    if(!cascade) {
+        cerr << "ERROR: Could not load classifier cascade" << endl;
         return;
     }
 
-    // Allocate the memory storage
     storage = cvCreateMemStorage(0);
-
-    // Create a new named window with title: result
-    cvNamedWindow( "result", 1 );
-
-    // Clear the memory storage which was used before
     cvClearMemStorage( storage );
 
     // Find whether the cascade is loaded, to find the hands. If yes, then:
-    if( cascade )
-    {
+    if(cascade) {
         // There can be more than one hand in an image. So create a growable sequence of hands.
         // Detect the objects and store them in the sequence
         CvSeq* hands = cvHaarDetectObjects( img, cascade, storage,
@@ -74,8 +70,7 @@ void HandGestureDialog::StartRecongizeHand (IplImage *img)
                                             cvSize(40, 40) );
 
         // Loop the number of hands found.
-        for( i = 0; i < (hands ? hands->total : 0); i++ )
-        {
+        for( i = 0; i < (hands ? hands->total : 0); i++ ) {
             // Create a new rectangle for drawing the hand
             CvRect* r = (CvRect*)cvGetSeqElem( hands, i );
 
@@ -89,32 +84,28 @@ void HandGestureDialog::StartRecongizeHand (IplImage *img)
             cvRectangle( img, pt1, pt2, CV_RGB(230,20,232), 3, 8, 0 );
         }
     }
-
-    // Show the image in the window named "result"
-    cvShowImage( "result", img );
-    cvWaitKey (30);
 }
 
 void HandGestureDialog::readFarme() {
     frame = cvQueryFrame(cam);
-
     IplImage* pTmp = cvCloneImage(frame);
     cvtImageShowMode(frame, pTmp);
+
+    gesture.SkinDetect (pTmp,afterSkin);
+
+    if(status_switch == Recongnise) {
+        // Flips the frame into mirror image
+        cvFlip(pTmp, pTmp, 1);
+        // Call the function to detect and draw the hand positions
+        StartRecongizeHand(pTmp);
+    }
+
     QImage image;
     IplImage2QImage(pTmp, image);
     cvReleaseImage(&pTmp);
 
     image = image.scaled(480,320);
     ui->label_CameraShow->setPixmap(QPixmap::fromImage(image));
-    gesture.SkinDetect (frame,afterSkin);
-
-    if(status_switch == Recongnise) {
-        // Flips the frame into mirror image
-        cvFlip(frame,frame,1);
-
-        // Call the function to detect and draw the hand positions
-        StartRecongizeHand(frame);
-    }
 }
 
 void HandGestureDialog::on_pushButton_OpenCamera_clicked() {
@@ -152,44 +143,50 @@ void HandGestureDialog::on_pushButton_CloseCamera_clicked()
     ui->pushButton_SnapImage->setDisabled (true);
 }
 
-void HandGestureDialog::on_pushButton_ShowPause_clicked()
-{
-    if(isRun == 1)
-    {
+void HandGestureDialog::on_pushButton_ShowPause_clicked() {
+    if(isRun == 1) {
         timer->stop();
-        ui->pushButton_ShowPause->setText (tr("继续拍摄"));
-    }
-    else
-    {
+        QTextCodec *codec = QTextCodec::codecForName("GB2312");
+        QString str = codec->toUnicode("继续拍摄");
+        ui->pushButton_ShowPause->setText(str);
+    } else {
         timer->start(time_intervals);
-        ui->pushButton_ShowPause->setText (tr("暂停"));
+        QTextCodec *codec = QTextCodec::codecForName("GB2312");
+        QString str = codec->toUnicode("暂停");
+        ui->pushButton_ShowPause->setText(str);
     }
     isRun *= (-1);
 }
 
-void HandGestureDialog::on_pushButton_StartTrain_clicked()
-{
+void HandGestureDialog::on_pushButton_StartTrain_clicked() {
     QProgressDialog* process = new QProgressDialog(this);
-    process->setWindowTitle ("Traning Model");
-    process->setLabelText("Processing...");
+    process->setWindowTitle (tr("Traning Model"));
+    process->setLabelText(tr("Processing..."));
     process->setModal(true);
     process->show ();
     gesture.setMainUIPointer (this);
     gesture.Train(process);
-    QMessageBox::about (this,tr("完成"),tr("手势训练模型完成"));
+    delete process;
+    QMessageBox::about (this,tr("Finished !"),tr("Basic Hand Gesture Recognition !"));
 }
 
-void HandGestureDialog::on_pushButton_StartRecongnise_clicked()
-{
-    if(cam==NULL)
-    {
+void HandGestureDialog::on_pushButton_StartRecongnise_clicked() {
+    if(cam==NULL) {
         QMessageBox::warning (this,tr("Warning"),tr("Please Check Camera !"));
         return;
     }
 
-    status_switch = Nothing;
-
-    status_switch = Recongnise;
+    if(status_switch == Recongnise) {
+        QTextCodec *codec = QTextCodec::codecForName("GB2312");
+        QString str = codec->toUnicode("开始手势识别");
+        ui->pushButton_StartRecongnise->setText(str);
+        status_switch = Nothing;
+    } else {
+        QTextCodec *codec = QTextCodec::codecForName("GB2312");
+        QString str = codec->toUnicode("暂停手势识别");
+        ui->pushButton_StartRecongnise->setText(str);
+        status_switch = Recongnise;
+    }
 }
 
 void HandGestureDialog::on_comboBox_ShowDelay_activated(int index)
