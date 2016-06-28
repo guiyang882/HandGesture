@@ -1,0 +1,17 @@
+{
+    "ROOTDIR": "/Users/liuguiyang/Documents/CodeProj/QtProj/HandGesture/",
+    "LOGPATH": "log/runinfo.log",
+    "SAMPLES": {
+        "ISUSE": "TRUE",
+        "CONTROLDIR": "images/ControlHand/",
+        "CONTROLFLAGS": ["DownFlag", "UpFlag", "LeftFlag", "RightFlag", "StopFlag", "StartFlag", "FinishFlag", "OkFlag"],
+        "NUMSDIR": "images/SingleNums/",
+        "NUMFLAGS": ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"]
+    },
+    "FEATURES": {
+        "ISUSE": "TRUE",
+        "GESTUREFILE": "features/gesture/gestureFeatureFile.yml",
+        "HANDFILE": "features/gesture/hand.xml"
+    },
+    "version": "0.1"
+}

@@ -408,8 +408,8 @@ void CAIGesture::OneGestureTrain(QDir GestureDir,CvFileStorage *fs,GestureStruct
     cvReleaseImage(&dst);
 }
 
-void CAIGesture::Train(QProgressDialog *pBar)//对指定训练文件夹里面的所有手势进行训练
-{
+//对指定训练文件夹里面的所有手势进行训练
+void CAIGesture::Train(QProgressDialog *pBar) {
     QString curStr = QDir::currentPath ();
     QString fp1 = "InfoDoc/gestureFeatureFile.yml";
     fp1 = curStr + "/" + fp1;

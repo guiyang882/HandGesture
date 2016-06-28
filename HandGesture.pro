@@ -18,12 +18,19 @@ INCLUDEPATH += /usr/local/Cellar/opencv/2.4.13/include
 SOURCES += source/main.cpp\
         source/handgesturedialog.cpp \
     source/gesture/GestrueInfo.cpp \
-    source/gesture/AIGesture.cpp
+    source/gesture/AIGesture.cpp \
+    source/utils/jsoncpp.cpp \
+    source/utils/log.cpp \
+    source/utils/utils.cpp
 
 HEADERS  += source/handgesturedialog.h \
     source/gesture/GestureStruct.h \
     source/gesture/GestrueInfo.h \
-    source/gesture/AIGesture.h
+    source/gesture/AIGesture.h \
+    source/utils/json/json-forwards.h \
+    source/utils/json/json.h \
+    source/utils/log.h \
+    source/utils/utils.h
 
 FORMS    += source/handgesturedialog.ui
 
@@ -34,5 +41,6 @@ LIBS += -L/usr/local/Cellar/opencv/2.4.13/lib \
         -lopencv_ml -lopencv_objdetect
 
 DISTFILES += \
-    README.md
+    README.md \
+    conf/configure.json
 

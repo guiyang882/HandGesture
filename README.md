@@ -4,7 +4,13 @@
 - [OpenCV 2.4.13](http://opencv.org/downloads.html)
 - [QtCreater 4.0 && Qt 5.6](https://www.qt.io/download/)
 
-## Algorithm
+## Skeleton Program
+- conf --> save configure.json file
+- docs --> main references
+- images --> main save the train samples
+- log --> program run log infor
+- features --> get the features about the  train samples
+- source --> main code here !
 
 ## Reference
 1. [原博客地址](http://blog.csdn.net/berguiliu/article/details/9307495)
