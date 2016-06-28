@@ -95,7 +95,9 @@ void HandGestureDialog::readFarme() {
 
     if(status_switch == Recongnise) {
         // Flips the frame into mirror image
-        cvFlip(pTmp, pTmp, 1);
+        if(pTmp->origin == IPL_ORIGIN_BL) {
+            cvFlip(pTmp, pTmp, IPL_ORIGIN_TL);
+        }
         // Call the function to detect and draw the hand positions
         StartRecongizeHand(pTmp);
     }
@@ -262,6 +264,8 @@ bool HandGestureDialog::cvtImageShowMode(IplImage *src, IplImage *dest) {
         break;
     case ISM_YUV:
         cvCvtColor(src, dest, CV_BGR2YUV);
+        break;
+    case ISM_BINARY:
         break;
     default:
         cout << "No Such ISM_Mode !" << endl;

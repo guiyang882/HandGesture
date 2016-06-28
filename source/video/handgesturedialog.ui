@@ -191,6 +191,11 @@
                  <string>YUV</string>
                 </property>
                </item>
+               <item>
+                <property name="text">
+                 <string>BINARY</string>
+                </property>
+               </item>
               </widget>
              </item>
             </layout>

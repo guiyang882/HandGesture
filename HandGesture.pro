@@ -16,23 +16,26 @@ TEMPLATE = app
 INCLUDEPATH += /usr/local/Cellar/opencv/2.4.13/include
 
 SOURCES += source/main.cpp\
-        source/handgesturedialog.cpp \
+        source/video/handgesturedialog.cpp \
     source/gesture/GestrueInfo.cpp \
     source/gesture/AIGesture.cpp \
     source/utils/jsoncpp.cpp \
     source/utils/log.cpp \
-    source/utils/utils.cpp
+    source/utils/utils.cpp \
+    source/filter/imagefilterdlg.cpp
 
-HEADERS  += source/handgesturedialog.h \
+HEADERS  += source/video/handgesturedialog.h \
     source/gesture/GestureStruct.h \
     source/gesture/GestrueInfo.h \
     source/gesture/AIGesture.h \
     source/utils/json/json-forwards.h \
     source/utils/json/json.h \
     source/utils/log.h \
-    source/utils/utils.h
+    source/utils/utils.h \
+    source/filter/imagefilterdlg.h
 
-FORMS    += source/handgesturedialog.ui
+FORMS    += source/video/handgesturedialog.ui \
+    source/filter/imagefilterdlg.ui
 
 LIBS += -L/usr/local/Cellar/opencv/2.4.13/lib \
         -lopencv_core -lopencv_features2d \
