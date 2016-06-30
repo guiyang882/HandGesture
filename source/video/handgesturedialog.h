@@ -5,10 +5,13 @@
 #include <iostream>
 #include <QTimer>
 #include <QTextCodec>
+#include <QMouseEvent>
+#include <QDebug>
 
-#include "gesture/GestureStruct.h"
-#include "gesture/AIGesture.h"
-#include "gesture/GestrueInfo.h"
+#include "../gesture/GestureStruct.h"
+#include "../gesture/AIGesture.h"
+#include "../gesture/GestrueInfo.h"
+#include "../filter/imagefilterdlg.h"
 
 using namespace std;
 using namespace cv;
@@ -17,6 +20,7 @@ namespace Ui {
 class HandGestureDialog;
 }
 
+class ImageFilterDlg;
 class HandGestureDialog : public QDialog
 {
     Q_OBJECT
@@ -27,9 +31,15 @@ public:
     void StartRecongizeHand(IplImage* img);
 
 public:
-    bool IplImage2QImage(IplImage* src, QImage& dest);
-    bool QImage2IplImage(QImage& src, IplImage& dest);
-    bool cvtImageShowMode(IplImage* src, IplImage* dest);
+    static bool IplImage2QImage(const IplImage *src, QImage& dest);
+    static bool QImage2IplImage(const QImage& src, IplImage& dest);
+    bool cvtImageShowMode(const IplImage *src, IplImage* dest);
+
+signals:
+    void grabImageFinished(IplImage* img);
+
+protected:
+    bool eventFilter(QObject* obj, QEvent* event);
 
 private slots:
     void readFarme();
@@ -41,6 +51,10 @@ private slots:
     void on_pushButton_StartRecongnise_clicked();
     void on_comboBox_ShowDelay_activated(int index);
     void on_comboBox_ImageMode_activated(int index);
+    void on_pushButton_StartGestureReg_clicked();
+
+private:
+    ImageFilterDlg* m_FilterDlg;
 
 private:
     Ui::HandGestureDialog *ui;
@@ -68,8 +82,8 @@ private:
     string result[8];
     int gesturecount;
 
-    CvPoint2D32f center;//用来储存手势的质心
-    float r;//手势的半径
+    CvPoint2D32f center;
+    float r;
     CvPoint* pt;
     string com_result;
     MyRect rect;

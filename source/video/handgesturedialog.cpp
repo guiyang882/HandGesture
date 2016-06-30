@@ -11,6 +11,7 @@ HandGestureDialog::HandGestureDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    m_FilterDlg = NULL;
     cam = NULL;
     frame = NULL;
     p_CurSnapImg = NULL;
@@ -28,6 +29,8 @@ HandGestureDialog::HandGestureDialog(QWidget *parent) :
     ui->pushButton_CloseCamera->setDisabled (true);
     ui->pushButton_ShowPause->setDisabled (true);
     ui->pushButton_SnapImage->setDisabled (true);
+
+    ui->widget_ShowImg->installEventFilter(this);
 }
 
 HandGestureDialog::~HandGestureDialog()
@@ -88,26 +91,40 @@ void HandGestureDialog::StartRecongizeHand (IplImage *img) {
 
 void HandGestureDialog::readFarme() {
     frame = cvQueryFrame(cam);
+    if(frame->origin == IPL_ORIGIN_BL) {
+        cvFlip(frame, frame, IPL_ORIGIN_TL);
+    }
+
+    emit grabImageFinished(frame);
+
     IplImage* pTmp = cvCloneImage(frame);
     cvtImageShowMode(frame, pTmp);
 
-    gesture.SkinDetect (pTmp,afterSkin);
-
     if(status_switch == Recongnise) {
         // Flips the frame into mirror image
-        if(pTmp->origin == IPL_ORIGIN_BL) {
-            cvFlip(pTmp, pTmp, IPL_ORIGIN_TL);
-        }
+
         // Call the function to detect and draw the hand positions
         StartRecongizeHand(pTmp);
     }
 
-    QImage image;
-    IplImage2QImage(pTmp, image);
-    cvReleaseImage(&pTmp);
+    {
+        QImage image;
+        IplImage2QImage(pTmp, image);
 
-    image = image.scaled(480,320);
-    ui->label_CameraShow->setPixmap(QPixmap::fromImage(image));
+        image = image.scaled(320,240);
+        ui->label_CameraShow->setPixmap(QPixmap::fromImage(image));
+    }
+
+    {
+        QImage image;
+        IplImage* grayImg = cvCreateImage(cvGetSize(pTmp), IPL_DEPTH_8U, 1);
+        cvCvtColor(pTmp, grayImg, CV_BGR2GRAY);
+        IplImage2QImage(grayImg, image);
+        image = image.scaled(320, 240);
+        ui->label_CameraShow_Gray->setPixmap(QPixmap::fromImage(image));
+    }
+
+    cvReleaseImage(&pTmp);
 }
 
 void HandGestureDialog::on_pushButton_OpenCamera_clicked() {
@@ -129,7 +146,7 @@ void HandGestureDialog::on_pushButton_SnapImage_clicked() {
         QImage image;
         IplImage2QImage(p_CurSnapImg, image);
 
-        image = image.scaled(200, 115);
+        image = image.scaled(220, 200);
         ui->label_ShowSnap->setPixmap(QPixmap::fromImage(image));
     }
 }
@@ -148,13 +165,13 @@ void HandGestureDialog::on_pushButton_CloseCamera_clicked()
 void HandGestureDialog::on_pushButton_ShowPause_clicked() {
     if(isRun == 1) {
         timer->stop();
-        QTextCodec *codec = QTextCodec::codecForName("GB2312");
-        QString str = codec->toUnicode("¼ÌÐøÅÄÉã");
+        QTextCodec *codec = QTextCodec::codecForName("utf-8");
+        QString str = codec->toUnicode("é‡æ–°å¼€å§‹");
         ui->pushButton_ShowPause->setText(str);
     } else {
         timer->start(time_intervals);
-        QTextCodec *codec = QTextCodec::codecForName("GB2312");
-        QString str = codec->toUnicode("ÔÝÍ£");
+        QTextCodec *codec = QTextCodec::codecForName("utf-8");
+        QString str = codec->toUnicode("æš‚åœ");
         ui->pushButton_ShowPause->setText(str);
     }
     isRun *= (-1);
@@ -179,13 +196,13 @@ void HandGestureDialog::on_pushButton_StartRecongnise_clicked() {
     }
 
     if(status_switch == Recongnise) {
-        QTextCodec *codec = QTextCodec::codecForName("GB2312");
-        QString str = codec->toUnicode("¿ªÊ¼ÊÖÊÆÊ¶±ð");
+        QTextCodec *codec = QTextCodec::codecForName("utf-8");
+        QString str = codec->toUnicode("å¼€å§‹æ‰‹åŠ¿è¯†åˆ«");
         ui->pushButton_StartRecongnise->setText(str);
         status_switch = Nothing;
     } else {
-        QTextCodec *codec = QTextCodec::codecForName("GB2312");
-        QString str = codec->toUnicode("ÔÝÍ£ÊÖÊÆÊ¶±ð");
+        QTextCodec *codec = QTextCodec::codecForName("utf-8");
+        QString str = codec->toUnicode("æš‚åœæ‰‹åŠ¿è¯†åˆ«");
         ui->pushButton_StartRecongnise->setText(str);
         status_switch = Recongnise;
     }
@@ -220,11 +237,16 @@ void HandGestureDialog::on_comboBox_ImageMode_activated(int index) {
     }
 }
 
-bool HandGestureDialog::IplImage2QImage(IplImage *src, QImage &dest) {
+void HandGestureDialog::on_pushButton_StartGestureReg_clicked() {
+
+}
+
+
+bool HandGestureDialog::IplImage2QImage(const IplImage *src, QImage &dest) {
     switch(src->depth) {
     case IPL_DEPTH_8U:
-        if(src->nChannels == 1 || src->nChannels == 4) {
-            dest = QImage((const uchar*)src->imageData, src->width, src->height, QImage::Format_ARGB32);
+        if(src->nChannels == 1) {
+            dest = QImage((const uchar*)src->imageData, src->width, src->height, QImage::Format_Grayscale8);
         } else if(src->nChannels == 3) {
             uchar newData[src->width*src->height*4*sizeof(uchar)];
             const uchar* imgData = (const uchar*) src->imageData;
@@ -241,17 +263,19 @@ bool HandGestureDialog::IplImage2QImage(IplImage *src, QImage &dest) {
             }
 
             dest = QImage(newData, src->width, src->height, QImage::Format_RGB32);
+        } else if(src->nChannels == 4) {
+            dest = QImage((const uchar*)src->imageData, src->width, src->height, QImage::Format_ARGB32);
         }
         return true;
     }
     return false;
 }
 
-bool HandGestureDialog::QImage2IplImage(QImage &src, IplImage &dest) {
+bool HandGestureDialog::QImage2IplImage(const QImage &src, IplImage &dest) {
     return false;
 }
 
-bool HandGestureDialog::cvtImageShowMode(IplImage *src, IplImage *dest) {
+bool HandGestureDialog::cvtImageShowMode(const IplImage *src, IplImage *dest) {
     switch(m_imgShowMode) {
     case ISM_RGB:
         //cvCvtColor(src, dest, CV_BGR2RGB);
@@ -270,4 +294,17 @@ bool HandGestureDialog::cvtImageShowMode(IplImage *src, IplImage *dest) {
     default:
         cout << "No Such ISM_Mode !" << endl;
     }
+}
+
+bool HandGestureDialog::eventFilter(QObject *obj, QEvent *event) {
+    if(obj == ui->widget_ShowImg) {
+        if(event->type() == QEvent::MouseButtonDblClick) {
+            if(m_FilterDlg == NULL) {
+                m_FilterDlg = new ImageFilterDlg();
+                QObject::connect(this, SIGNAL(grabImageFinished(IplImage*)), m_FilterDlg, SLOT(fetchImage(IplImage*)));
+                m_FilterDlg->show();
+            }
+        }
+    }
+    return true;
 }

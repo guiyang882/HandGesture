@@ -1,4 +1,4 @@
-#include "handgesturedialog.h"
+#include "./video/handgesturedialog.h"
 #include "./utils/log.h"
 #include "./utils/utils.h"
 
