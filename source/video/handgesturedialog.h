@@ -8,10 +8,10 @@
 #include <QMouseEvent>
 #include <QDebug>
 
+#include "stronglabel.h"
 #include "../gesture/GestureStruct.h"
 #include "../gesture/AIGesture.h"
 #include "../gesture/GestrueInfo.h"
-#include "../filter/imagefilterdlg.h"
 
 using namespace std;
 using namespace cv;
@@ -20,7 +20,6 @@ namespace Ui {
 class HandGestureDialog;
 }
 
-class ImageFilterDlg;
 class HandGestureDialog : public QDialog
 {
     Q_OBJECT
@@ -33,13 +32,12 @@ public:
 public:
     static bool IplImage2QImage(const IplImage *src, QImage& dest);
     static bool QImage2IplImage(const QImage& src, IplImage& dest);
+    static bool CvMat2QImage(const cv::Mat& mat, QImage& qImg);
+    static bool QImage2CvMat(const QImage& qImg,cv::Mat& mat);
     bool cvtImageShowMode(const IplImage *src, IplImage* dest);
 
 signals:
     void grabImageFinished(IplImage* img);
-
-protected:
-    bool eventFilter(QObject* obj, QEvent* event);
 
 private slots:
     void readFarme();
@@ -52,9 +50,6 @@ private slots:
     void on_comboBox_ShowDelay_activated(int index);
     void on_comboBox_ImageMode_activated(int index);
     void on_pushButton_StartGestureReg_clicked();
-
-private:
-    ImageFilterDlg* m_FilterDlg;
 
 private:
     Ui::HandGestureDialog *ui;

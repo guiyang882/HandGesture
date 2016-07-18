@@ -11,7 +11,6 @@ HandGestureDialog::HandGestureDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    m_FilterDlg = NULL;
     cam = NULL;
     frame = NULL;
     p_CurSnapImg = NULL;
@@ -29,8 +28,6 @@ HandGestureDialog::HandGestureDialog(QWidget *parent) :
     ui->pushButton_CloseCamera->setDisabled (true);
     ui->pushButton_ShowPause->setDisabled (true);
     ui->pushButton_SnapImage->setDisabled (true);
-
-    ui->widget_ShowImg->installEventFilter(this);
 }
 
 HandGestureDialog::~HandGestureDialog()
@@ -122,6 +119,7 @@ void HandGestureDialog::readFarme() {
         IplImage2QImage(grayImg, image);
         image = image.scaled(320, 240);
         ui->label_CameraShow_Gray->setPixmap(QPixmap::fromImage(image));
+//        p_MyLabel->setPixmap(QPixmap::fromImage(image));
     }
 
     cvReleaseImage(&pTmp);
@@ -241,7 +239,6 @@ void HandGestureDialog::on_pushButton_StartGestureReg_clicked() {
 
 }
 
-
 bool HandGestureDialog::IplImage2QImage(const IplImage *src, QImage &dest) {
     switch(src->depth) {
     case IPL_DEPTH_8U:
@@ -275,6 +272,50 @@ bool HandGestureDialog::QImage2IplImage(const QImage &src, IplImage &dest) {
     return false;
 }
 
+bool HandGestureDialog::CvMat2QImage(const cv::Mat& mat, QImage& qImg) {
+    // 8-bits unsigned, NO. OF CHANNELS = 1
+    if(mat.type() == CV_8UC1) {
+        qImg = QImage(mat.cols, mat.rows, QImage::Format_Indexed8);
+        // Set the color table (used to translate colour indexes to qRgb values)
+        qImg.setColorCount(256);
+        for(int i = 0; i < 256; i++) {
+            qImg.setColor(i, qRgb(i, i, i));
+        }
+        // Copy input Mat
+        uchar *pSrc = mat.data;
+        for(int row = 0; row < mat.rows; row ++) {
+            uchar *pDest = qImg.scanLine(row);
+            memcpy(pDest, pSrc, mat.cols);
+            pSrc += mat.step;
+        }
+        return true;
+    }
+    // 8-bits unsigned, NO. OF CHANNELS = 3
+    if(mat.type() == CV_8UC3) {
+        // Copy input Mat
+        const uchar *pSrc = (const uchar*)mat.data;
+        // Create QImage with same dimensions as input Mat
+        qImg = QImage(pSrc, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
+        qImg = qImg.rgbSwapped();
+        return true;
+    }
+
+    if(mat.type() == CV_8UC4) {
+        // Copy input Mat
+        const uchar *pSrc = (const uchar*)mat.data;
+        // Create QImage with same dimensions as input Mat
+        qImg = QImage(pSrc, mat.cols, mat.rows, mat.step, QImage::Format_ARGB32);
+        qImg = qImg.copy();
+        return true;
+    }
+    qDebug() << "ERROR: Mat could not be converted to QImage.";
+    return false;
+}
+
+bool HandGestureDialog::QImage2CvMat(const QImage& qImg,cv::Mat& mat) {
+
+}
+
 bool HandGestureDialog::cvtImageShowMode(const IplImage *src, IplImage *dest) {
     switch(m_imgShowMode) {
     case ISM_RGB:
@@ -294,17 +335,4 @@ bool HandGestureDialog::cvtImageShowMode(const IplImage *src, IplImage *dest) {
     default:
         cout << "No Such ISM_Mode !" << endl;
     }
-}
-
-bool HandGestureDialog::eventFilter(QObject *obj, QEvent *event) {
-    if(obj == ui->widget_ShowImg) {
-        if(event->type() == QEvent::MouseButtonDblClick) {
-            if(m_FilterDlg == NULL) {
-                m_FilterDlg = new ImageFilterDlg();
-                QObject::connect(this, SIGNAL(grabImageFinished(IplImage*)), m_FilterDlg, SLOT(fetchImage(IplImage*)));
-                m_FilterDlg->show();
-            }
-        }
-    }
-    return true;
 }

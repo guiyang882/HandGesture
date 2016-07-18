@@ -14,6 +14,7 @@ TARGET = HandGesture
 TEMPLATE = app
 
 INCLUDEPATH += /usr/local/Cellar/opencv/2.4.13/include
+INCLUDEPATH += /Users/liuguiyang/Documents/CodeProj/QtProj/HandGesture/source/video
 
 SOURCES += source/main.cpp\
         source/video/handgesturedialog.cpp \
@@ -22,7 +23,8 @@ SOURCES += source/main.cpp\
     source/utils/jsoncpp.cpp \
     source/utils/log.cpp \
     source/utils/utils.cpp \
-    source/filter/imagefilterdlg.cpp
+    source/video/stronglabel.cpp \
+    source/ui/threshold.cpp
 
 HEADERS  += source/video/handgesturedialog.h \
     source/gesture/GestureStruct.h \
@@ -32,10 +34,11 @@ HEADERS  += source/video/handgesturedialog.h \
     source/utils/json/json.h \
     source/utils/log.h \
     source/utils/utils.h \
-    source/filter/imagefilterdlg.h
+    source/video/stronglabel.h \
+    source/ui/threshold.h
 
 FORMS    += source/video/handgesturedialog.ui \
-    source/filter/imagefilterdlg.ui
+    source/ui/threshold.ui
 
 LIBS += -L/usr/local/Cellar/opencv/2.4.13/lib \
         -lopencv_core -lopencv_features2d \
