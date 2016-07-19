@@ -17,7 +17,7 @@
 
 ## 程序运行展示
 - 运行程序的主界面
-![程序的主界面](https://github.com/ButBueatiful/dotvim/raw/master/screenshots/vim-screenshot.jpg)
+![程序的主界面](https://github.com/liuguiyangnwpu/HandGesture/blob/master/snapshot/main.png)
 
 ## Reference
 1. [原博客地址](http://blog.csdn.net/berguiliu/article/details/9307495)
