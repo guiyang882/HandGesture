@@ -1,4 +1,7 @@
-#手势控制程序
+# 图像处理的综合应用
+- 该程序主要进行图像处理的算法的相关实现
+- 其中包括图像的阈值分割算法
+- 对于视频场景的前景与背景的建模方法
 
 ## Requirements
 - [OpenCV 2.4.13](http://opencv.org/downloads.html)
@@ -11,6 +14,10 @@
 - log --> program run log infor
 - features --> get the features about the  train samples
 - source --> main code here !
+
+## 程序运行展示
+- 运行程序的主界面
+![程序的主界面](https://github.com/ButBueatiful/dotvim/raw/master/screenshots/vim-screenshot.jpg)
 
 ## Reference
 1. [原博客地址](http://blog.csdn.net/berguiliu/article/details/9307495)
