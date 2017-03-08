@@ -231,7 +231,7 @@ void HandGestureDialog::on_comboBox_ImageMode_activated(int index) {
         m_imgShowMode = ISM_YCBCR;
     }
     if(index == 3) {
-        m_imgShowMode == ISM_YUV;
+        m_imgShowMode = ISM_YUV;
     }
 }
 

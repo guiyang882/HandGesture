@@ -25,7 +25,7 @@ void CAIGesture::ColorRegulate(IplImage* src,IplImage* dst) {
     IplImage* G=cvCreateImage(cvGetSize(src),8,1);
     IplImage* B=cvCreateImage(cvGetSize(src),8,1);
 
-    cvCvtPixToPlane(src,R,G,B,0);
+    cvSplit(src,R,G,B,0);
 
     CvScalar aveR=cvAvg(R,NULL);
     CvScalar aveG=cvAvg(G,NULL);
@@ -86,7 +86,7 @@ void CAIGesture::SkinDetect(IplImage* src,IplImage* dst) {
 
     cvSmooth(src,src_tmp1,CV_GAUSSIAN,3,3);	//Gaussian Blur
     cvCvtColor(src_tmp1, hsv, CV_BGR2HSV );//Color Space to Convert
-    cvCvtPixToPlane(hsv,H,S,V,0);//To Split 3 channel
+    cvSplit(hsv,H,S,V,0);//To Split 3 channel
 
     /*********************Skin Detect**************/
     cvInRangeS(H,cvScalar(0.0,0.0,0,0),cvScalar(20.0,0.0,0,0),tmpH1);
@@ -418,7 +418,7 @@ void CAIGesture::Recognise(IplImage* src, string &result) {
         fscanf(fp,"%s\n",buff);
         GestureName[i]=buff;
     }
-    delete buff;
+    delete[] buff;
     fclose(fp);
     float angle[FeatureNum][10]={0},anglecha[FeatureNum][10]={0};//定义求取肤色色度的中间变量
     float Sbangle[FeatureNum][10]={0},Sbanglecha[FeatureNum][10]={0};//定义求取非肤色色度的中间变量
@@ -542,7 +542,7 @@ void CAIGesture::Follow(IplImage* src,CvRect& track_window,CvBox2D &track_box) {
     hist = cvCreateHist( 1, &hdims, CV_HIST_ARRAY, &hranges, 1 );
 
     cvCvtColor(src,hsv,CV_BGR2HSV);
-    cvCvtPixToPlane(hsv,h,s,v,0);
+    cvSplit(hsv,h,s,v,0);
 
     cvInRangeS(h,cvScalar(0.0,0.0,0,0),cvScalar(12.0,0.0,0,0),mask_tmp1);
     cvInRangeS(s,cvScalar(75.0,0.0,0,0),cvScalar(200.0,0.0,0,0),mask_tmp2);
@@ -726,7 +726,7 @@ void CAIGesture::Follow(IplImage* src, CvRect& track_window, CvHistogram* &hist,
     backproject=cvCreateImage(cvGetSize(src),8,1);
 
     cvCvtColor(src,hsv,CV_BGR2HSV);
-    cvCvtPixToPlane(hsv,h,s,v,0);
+    cvSplit(hsv,h,s,v,0);
 
     cvInRangeS(h,cvScalar(0.0,0.0,0,0),cvScalar(12.0,0.0,0,0),mask_tmp1);
     cvInRangeS(s,cvScalar(75.0,0.0,0,0),cvScalar(200.0,0.0,0,0),mask_tmp2);
@@ -743,16 +743,15 @@ void CAIGesture::Follow(IplImage* src, CvRect& track_window, CvHistogram* &hist,
     cvOr(mask_tmp3,mask_tmp2,mask_tmp2,0);
     cvOr(mask_tmp2,mask_tmp1,mask,0);
 
-    if(Flag)//当Flag为TRUE的话，先跟踪后求直方图，这个直方图是下一祯跟踪的直方图
-    {
+    //当Flag为TRUE的话，先跟踪后求直方图，这个直方图是下一祯跟踪的直方图
+    if(Flag) {
         cvAnd(backproject,mask,backproject,0);
         cvCalcBackProject(&h,backproject,hist);
-    }
-    else//当Flag为FALSE的话，先求直方图后直接退出，相当这一祯是作为初始化用的，不跟踪对象
-    {
+    } else {
+        //当Flag为FALSE的话，先求直方图后直接退出，相当这一祯是作为初始化用的，不跟踪对象
         cvCalcBackProject(&h,backproject,hist);
         cvAnd(backproject,mask,backproject,0);
-        Flag=TRUE;
+        Flag=true;
         cvReleaseImage(&hsv);
         cvReleaseImage(&h);
         cvReleaseImage(&s);
@@ -799,8 +798,8 @@ void CAIGesture::Follow(IplImage* src, CvRect& track_window, CvHistogram* &hist,
     cvReleaseImage(&backproject);
 }
 
-void CAIGesture::CalcHist(IplImage* src,CvRect& rect,CvHistogram* &hist)//对一个指定的Rect求直方图
-{
+//对一个指定的Rect求直方图
+void CAIGesture::CalcHist(IplImage* src,CvRect& rect,CvHistogram* &hist) {
     IplImage* hsv=0;
     IplImage* h=0;
     IplImage* s=0;
@@ -818,7 +817,7 @@ void CAIGesture::CalcHist(IplImage* src,CvRect& rect,CvHistogram* &hist)//对一个
     hist = cvCreateHist( 1, &hdims, CV_HIST_ARRAY, &hranges, 1 );
 
     cvCvtColor(src,hsv,CV_BGR2HSV);
-    cvCvtPixToPlane(hsv,h,s,v,0);
+    cvSplit(hsv,h,s,v,0);
 
     cvSetImageROI( h, rect );
     cvCalcHist(&h,hist,0,NULL);
@@ -830,8 +829,7 @@ void CAIGesture::CalcHist(IplImage* src,CvRect& rect,CvHistogram* &hist)//对一个
     cvReleaseImage(&v);
 }
 
-void CAIGesture::Location(IplImage* src[8], MyRect &rect)
-{
+void CAIGesture::Location(IplImage* src[8], MyRect &rect) {
     IplImage* dst=cvCreateImage(cvGetSize(src[0]),8,1);
     CvSeq* contour_tmp;
     CvMemStorage* storage=cvCreateMemStorage(0);
@@ -841,19 +839,15 @@ void CAIGesture::Location(IplImage* src[8], MyRect &rect)
     QList<GestrueInfo> tmpList;
     QList<GestrueInfo>::iterator pos;
     GestrueInfo tmpinfo;
-    for(int i=0;i<8;i++)
-    {
+    for(int i=0;i<8;i++) {
         SkinDetect(src[i],dst);
         int contourcount=cvFindContours(dst, storage, &contour_tmp, sizeof(CvContour), CV_RETR_LIST, CV_CHAIN_APPROX_NONE );
         if(contourcount==0)
             return;
-        if(tmpList.isEmpty ())
-        {
-            for( ; contour_tmp != 0; contour_tmp = contour_tmp->h_next )
-            {
+        if(tmpList.isEmpty ()) {
+            for( ; contour_tmp != 0; contour_tmp = contour_tmp->h_next ) {
                 bndRect = cvBoundingRect( contour_tmp, 0 );
-                if(bndRect.width>20&&bndRect.height>20)
-                {
+                if(bndRect.width>20&&bndRect.height>20) {
                     cvSetImageROI(src[i],bndRect);
                     Recognise(src[i],result);
                     if(result.empty ())
@@ -891,12 +885,10 @@ void CAIGesture::Location(IplImage* src[8], MyRect &rect)
         }
     }
     pos=tmpList.begin();
-    while(pos!=tmpList.end ())
-    {
+    while(pos!=tmpList.end ()) {
         string result;
         RecogniseResult((*pos).GetGestureName(),result);
-        if(!result.empty ())
-        {
+        if(!result.empty ()) {
             cout << result << endl;
             rect=(*pos).GetRect();
             break;
