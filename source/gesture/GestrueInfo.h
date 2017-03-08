@@ -6,8 +6,7 @@
 
 using namespace std;
 
-class GestrueInfo  
-{
+class GestrueInfo {
 public:
 	GestrueInfo();
 	virtual ~GestrueInfo();

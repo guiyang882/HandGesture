@@ -27,13 +27,11 @@ const int FeatureNum=5;//定义手势特征的圈数
 #define COMEON  0x04
 #define GO      0x8
 
-class MyPoint
-{
+class MyPoint {
 private:
     int m_x,m_y;
 public:
-    MyPoint(int x,int y)
-    {
+    MyPoint(int x,int y) {
         m_x = x;
         m_y = y;
     }
@@ -41,45 +39,38 @@ public:
     int Y(){return m_y;}
 };
 
-typedef struct _MyRect
-{
+typedef struct _MyRect {
     int m_x,m_y;
     int m_width,m_height;
 
-    void initRect(int x,int y,int width,int height)
-    {
+    void initRect(int x,int y,int width,int height) {
         m_x = x;m_y = y;m_width = width;m_height = height;
     }
 
-    void initPointRect (MyPoint top_left,MyPoint right_bottom)
-    {
+    void initPointRect (MyPoint top_left,MyPoint right_bottom) {
         m_x = top_left.X ();
         m_y = top_left.Y ();
         m_width = right_bottom.X ()-top_left.X ();
         m_height = right_bottom.Y ()-top_left.Y ();
     }
 
-    void SetRectEmpty()
-    {
+    void SetRectEmpty() {
         m_x = 0,m_y = 0;
         m_width = 0,m_height = 0;
     }
 
-    bool IsRectEmpty()
-    {
+    bool IsRectEmpty() {
         if(m_width == 0 || m_height == 0)
             return true;
         return false;
     }
 
-    MyPoint TopLeft()
-    {
+    MyPoint TopLeft() {
         MyPoint temp(m_x,m_y);
         return temp;
     }
 
-    MyPoint BottomRight()
-    {
+    MyPoint BottomRight() {
         MyPoint temp(m_x+m_width,m_y+m_height);
         return temp;
     }
@@ -90,8 +81,8 @@ typedef struct _MyRect
     int Height(){return m_height;}
 }MyRect;
 
-struct GestureStruct//定义一个手势结构
-{
+//定义一个手势结构
+struct GestureStruct {
     float angle[FeatureNum][10];//肤色角度
     float anglecha[FeatureNum][10];//非肤色角度
     float count[FeatureNum];//角度肤色的个数

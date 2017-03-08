@@ -5,8 +5,7 @@
 #include <QProgressDialog>
 
 class HandGestureDialog;
-class CAIGesture  
-{
+class CAIGesture {
 public:
 	CAIGesture();
 	virtual ~CAIGesture();

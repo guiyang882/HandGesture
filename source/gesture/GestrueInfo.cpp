@@ -1,20 +1,16 @@
 #include "GestrueInfo.h"
 
-GestrueInfo::GestrueInfo()
-{
+GestrueInfo::GestrueInfo() {
 	m_GestureNameCount=0;
 }
 
-GestrueInfo::~GestrueInfo()
-{
+GestrueInfo::~GestrueInfo() {
 
 }
 
-bool GestrueInfo::IsTheSamePosition(MyRect rect, MyRect &comparerect)
-{
+bool GestrueInfo::IsTheSamePosition(MyRect rect, MyRect &comparerect) {
     MyRect tmprect;
-	if(!rect.IsRectEmpty()&&!comparerect.IsRectEmpty())
-	{
+	if(!rect.IsRectEmpty()&&!comparerect.IsRectEmpty()) {
         /*find the public part*/
         int x = rect.vertex_X ()>comparerect.vertex_X ()?comparerect.vertex_X ():rect.vertex_X ();
         int y = rect.vertex_Y ()>comparerect.vertex_Y ()?comparerect.vertex_Y ():rect.vertex_Y ();

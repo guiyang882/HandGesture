@@ -1,0 +1,4 @@
+/Users/liuguiyang/Documents/CodeProj/QtProj/HandGesture/bin/CMakeFiles/rebuild_cache.dir
+/Users/liuguiyang/Documents/CodeProj/QtProj/HandGesture/bin/CMakeFiles/edit_cache.dir
+/Users/liuguiyang/Documents/CodeProj/QtProj/HandGesture/bin/CMakeFiles/HandGesture.dir
+/Users/liuguiyang/Documents/CodeProj/QtProj/HandGesture/bin/CMakeFiles/HandGesture_automoc.dir

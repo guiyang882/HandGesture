@@ -8,23 +8,19 @@
 extern map<string, string> g_ConfigMap;
 extern map<string, vector<string>> g_TargetMap;
 
-CAIGesture::CAIGesture()
-{
+CAIGesture::CAIGesture() {
     pMainUI = NULL;
 }
 
-CAIGesture::~CAIGesture()
-{
+CAIGesture::~CAIGesture() {
 
 }
 
-void CAIGesture::setMainUIPointer (HandGestureDialog *pDlg)
-{
+void CAIGesture::setMainUIPointer (HandGestureDialog *pDlg) {
     pMainUI = pDlg;
 }
 
-void CAIGesture::ColorRegulate(IplImage* src,IplImage* dst)
-{
+void CAIGesture::ColorRegulate(IplImage* src,IplImage* dst) {
     IplImage* R=cvCreateImage(cvGetSize(src),8,1);
     IplImage* G=cvCreateImage(cvGetSize(src),8,1);
     IplImage* B=cvCreateImage(cvGetSize(src),8,1);
@@ -49,10 +45,8 @@ void CAIGesture::ColorRegulate(IplImage* src,IplImage* dst)
     uchar* dataG=(uchar*)G->imageData;
     uchar* dataB=(uchar*)B->imageData;
 
-    for(int i=0;i<height;i++)
-    {
-        for(int j=0;j<width;j++)
-        {
+    for(int i=0;i<height;i++) {
+        for(int j=0;j<width;j++) {
             dataR[i*stepR+j]=(unsigned char)(aR*dataR[i*stepR+j]);
             dataG[i*stepG+j]=(unsigned char)(aG*dataG[i*stepG+j]);
             dataB[i*stepB+j]=(unsigned char)(aB*dataB[i*stepB+j]);
@@ -67,8 +61,7 @@ void CAIGesture::ColorRegulate(IplImage* src,IplImage* dst)
 }
 
 //Histgrom Normalization ,src is Input Image,dst is Output Image
-void CAIGesture::EqualImage(IplImage* src,IplImage* dst)
-{
+void CAIGesture::EqualImage(IplImage* src,IplImage* dst) {
     IplImage* gray=cvCreateImage(cvGetSize(src),8,1);
     cvCvtColor(src,gray,CV_BGR2GRAY);
     cvSaveImage("gray.jpg",gray);
@@ -78,8 +71,7 @@ void CAIGesture::EqualImage(IplImage* src,IplImage* dst)
     cvReleaseImage(&gray);
 }
 
-void CAIGesture::SkinDetect(IplImage* src,IplImage* dst)
-{
+void CAIGesture::SkinDetect(IplImage* src,IplImage* dst) {
     IplImage* hsv = cvCreateImage(cvGetSize(src), IPL_DEPTH_8U, 3);//use to split to HSV
     IplImage* tmpH1 = cvCreateImage( cvGetSize(src), IPL_DEPTH_8U, 1);//Use To Skin Detect
     IplImage* tmpS1 = cvCreateImage(cvGetSize(src), IPL_DEPTH_8U, 1);
@@ -133,20 +125,18 @@ void CAIGesture::SkinDetect(IplImage* src,IplImage* dst)
 }
 
 //To Find The biggest Countour
-void CAIGesture::FindBigContour(IplImage* src,CvSeq* (&contour),CvMemStorage* storage)
-{
+void CAIGesture::FindBigContour(IplImage* src,CvSeq* (&contour),CvMemStorage* storage) {
     CvSeq* contour_tmp,*contourPos;
     int contourcount=cvFindContours(src, storage, &contour_tmp, sizeof(CvContour), CV_RETR_LIST, CV_CHAIN_APPROX_NONE );
     if(contourcount==0)
         return;
     CvRect bndRect = cvRect(0,0,0,0);
     double contourArea,maxcontArea=0;
-    for( ; contour_tmp != 0; contour_tmp = contour_tmp->h_next )
-    {
+    for( ; contour_tmp != 0; contour_tmp = contour_tmp->h_next ) {
         bndRect = cvBoundingRect( contour_tmp, 0 );
         contourArea=bndRect.width*bndRect.height;
-        if(contourArea>=maxcontArea)//find Biggest Countour
-        {
+        //find Biggest Countour
+        if(contourArea>=maxcontArea) {
             maxcontArea=contourArea;
             contourPos=contour_tmp;
         }
@@ -155,8 +145,7 @@ void CAIGesture::FindBigContour(IplImage* src,CvSeq* (&contour),CvMemStorage* st
 }
 
 //Calculate The Center
-void CAIGesture::ComputeCenter(CvSeq* (&contour),CvPoint& center,float& radius)
-{
+void CAIGesture::ComputeCenter(CvSeq* (&contour),CvPoint& center,float& radius) {
     CvMoments m;
     double M00,X,Y;
     cvMoments(contour,&m,0);
@@ -174,8 +163,7 @@ void CAIGesture::ComputeCenter(CvSeq* (&contour),CvPoint& center,float& radius)
     double tmpr1,r=0;
     hull=cvConvexHull2(contour,0,CV_COUNTER_CLOCKWISE,0);
     hullcount=hull->total;
-    for(int i=1;i<hullcount;i++)
-    {
+    for(int i=1;i<hullcount;i++) {
         pt=**CV_GET_SEQ_ELEM(CvPoint*,hull,i);//get each point
         tmpr1=sqrt((double)((center.x-pt.x)*(center.x-pt.x))+(double)((center.y-pt.y)*(center.y-pt.y)));//计算与中心点的大小
         if(tmpr1>r)//as the max radius
@@ -186,8 +174,8 @@ void CAIGesture::ComputeCenter(CvSeq* (&contour),CvPoint& center,float& radius)
 
 void CAIGesture::GetFeature(IplImage* src,CvPoint& center,float radius,
                             float angle[FeatureNum][10],
-float anglecha[FeatureNum][10],
-float count[FeatureNum])
+                            float anglecha[FeatureNum][10], 
+                            float count[FeatureNum])
 {
     int width=src->width;
     int height=src->height;
@@ -199,13 +187,11 @@ float count[FeatureNum])
     float angle1_tmp[200]={0},angle2_tmp[200]={0},angle1[50]={0},angle2[50]={0};//temp instance to calculate angule
     int angle1_tmp_count=0,angle2_tmp_count=0,angle1count=0,angle2count=0,anglecount=0;
 
-    for(int i=0;i<FeatureNum;i++)//分FeatureNum层进行特征提取（也就是5层）分析
-    {
+    //分FeatureNum层进行特征提取（也就是5层）分析
+    for(int i=0;i<FeatureNum;i++) {
         R=(i+4)*radius/9;
-        for(int j=0;j<=3600;j++)
-        {
-            if(j<=900)
-            {
+        for(int j=0;j<=3600;j++) {
+            if(j<=900) {
                 a1=(int)(R*sin(j*3.14/1800));//这个要自己实际画一张图就明白了
                 b1=(int)(R*cos(j*3.14/1800));
                 x1=center.x-b1;
@@ -214,11 +200,8 @@ float count[FeatureNum])
                 b2=(int)(R*cos((j+1)*3.14/1800));
                 x2=center.x-b2;
                 y2=center.y-a2;
-            }
-            else
-            {
-                if(j>900&&j<=1800)
-                {
+            } else {
+                if(j>900&&j<=1800) {
                     a1=(int)(R*sin((j-900)*3.14/1800));
                     b1=(int)(R*cos((j-900)*3.14/1800));
                     x1=center.x+a1;
@@ -227,11 +210,8 @@ float count[FeatureNum])
                     b2=(int)(R*cos((j+1-900)*3.14/1800));
                     x2=center.x+a2;
                     y2=center.y-b2;
-                }
-                else
-                {
-                    if(j>1800&&j<2700)
-                    {
+                } else {
+                    if(j>1800&&j<2700) {
                         a1=(int)(R*sin((j-1800)*3.14/1800));
                         b1=(int)(R*cos((j-1800)*3.14/1800));
                         x1=center.x+b1;
@@ -240,9 +220,7 @@ float count[FeatureNum])
                         b2=(int)(R*cos((j+1-1800)*3.14/1800));
                         x2=center.x+b2;
                         y2=center.y+a2;
-                    }
-                    else
-                    {
+                    } else {
                         a1=(int)(R*sin((j-2700)*3.14/1800));
                         b1=(int)(R*cos((j-2700)*3.14/1800));
                         x1=center.x-a1;
@@ -255,49 +233,39 @@ float count[FeatureNum])
                 }
             }
 
-            if(x1>0&&x1<width&&x2>0&&x2<width&&y1>0&&y1<height&&y2>0&&y2<height)
-            {
-                if((int)data[y1*step+x1]==255&&(int)data[y2*step+x2]==0)
-                {
+            if(x1>0&&x1<width&&x2>0&&x2<width&&y1>0&&y1<height&&y2>0&&y2<height) {
+                if((int)data[y1*step+x1]==255&&(int)data[y2*step+x2]==0) {
                     angle1_tmp[angle1_tmp_count]=(float)(j*0.1);//从肤色到非肤色的角度
                     angle1_tmp_count++;
-                }
-                else if((int)data[y1*step+x1]==0&&(int)data[y2*step+x2]==255)
-                {
+                } else if((int)data[y1*step+x1]==0&&(int)data[y2*step+x2]==255) {
                     angle2_tmp[angle2_tmp_count]=(float)(j*0.1);//从非肤色到肤色的角度
                     angle2_tmp_count++;
                 }
             }
         }
         int j=0;
-        for(j=0;j<angle1_tmp_count;j++)
-        {
+        for(j=0;j<angle1_tmp_count;j++) {
             if(angle1_tmp[j]-angle1_tmp[j-1]<0.2)//忽略太小的角度
                 continue;
             angle1[angle1count]=angle1_tmp[j];
             angle1count++;
         }
 
-        for(j=0;j<angle2_tmp_count;j++)
-        {
+        for(j=0;j<angle2_tmp_count;j++) {
             if(angle2_tmp[j]-angle2_tmp[j-1]<0.2)
                 continue;
             angle2[angle2count]=angle2_tmp[j];
             angle2count++;
         }
 
-        for(j=0;j<max(angle1count,angle2count);j++)
-        {
-            if(angle1[0]>angle2[0])
-            {
+        for(j=0;j<max(angle1count,angle2count);j++) {
+            if(angle1[0]>angle2[0]) {
                 if(angle1[j]-angle2[j]<7)//忽略小于7度的角度，因为人的手指一般都大于这个值
                     continue;
                 angle[i][anglecount]=(float)((angle1[j]-angle2[j])*0.01);//肤色的角度
                 anglecha[i][anglecount]=(float)((angle2[j+1]-angle1[j])*0.01);//非肤色的角度，例如手指间的角度
                 anglecount++;
-            }
-            else
-            {
+            } else {
                 if(angle1[j+1]-angle2[j]<7)
                     continue;
                 anglecount++;
@@ -313,13 +281,11 @@ float count[FeatureNum])
 
         count[i]=(float)anglecount;
         angle1_tmp_count=0,angle2_tmp_count=0,angle1count=0,angle2count=0,anglecount=0;
-        for(j=0;j<200;j++)
-        {
+        for(j=0;j<200;j++) {
             angle1_tmp[j]=0;
             angle2_tmp[j]=0;
         }
-        for(j=0;j<50;j++)
-        {
+        for(j=0;j<50;j++) {
             angle1[j]=0;
             angle2[j]=0;
         }
@@ -429,8 +395,7 @@ void CAIGesture::Train(QProgressDialog *pBar) {
 }
 
 //下面部分是静态图片的识别
-void CAIGesture::Recognise(IplImage* src, string &result)
-{
+void CAIGesture::Recognise(IplImage* src, string &result) {
     QString curStr = QDir::currentPath ();
     FILE* fp;
     QString f1 = "InfoDoc/gestureFile.txt";
@@ -482,8 +447,7 @@ void CAIGesture::Recognise(IplImage* src, string &result)
     f2 = curStr+"/"+f2;
     CvFileStorage *fs=cvOpenFileStorage(f2.toStdString ().c_str (),0,CV_STORAGE_READ);
     CvFileNode* filenode;
-    for( i=0;i<GestureNum;i++)
-    {
+    for( i=0;i<GestureNum;i++) {
         string m_tmp = GestureName[i]+"anglecountName";
         filenode=cvGetFileNodeByName(fs,NULL,m_tmp.c_str ());
         cvReadRawData(fs,filenode,Sbcount,"f");//读取数据到Sbcount这个数组中
@@ -491,31 +455,27 @@ void CAIGesture::Recognise(IplImage* src, string &result)
         for(int j=0;j<FeatureNum;j++)
             mask_tmp+=fabs(Sbcount[j]-count[j])*fabs(Sbcount[j]-count[j]);//先对肤色角度的个数进行匹配
 
-        if(mask_tmp<5)
-        {
+        if(mask_tmp<5) {
             mask[maskcount]=i;
             maskcount++;
         }
         mask_tmp=0;
     }
 
-    for(i=0;i<maskcount;i++)
-    {
+    for(i=0;i<maskcount;i++) {
         string m_tmp = GestureName[mask[i]]+"angleName";
         filenode=cvGetFileNodeByName(fs,NULL,m_tmp.c_str ());
         cvReadRawData(fs,filenode,Sbangle,"f");
         for(int j=0;j<FeatureNum;j++)
             for(int k=0;k<10;k++)
                 mask_tmp1+=fabs(Sbangle[j][k]-angle[j][k])*fabs(Sbangle[j][k]-angle[j][k]);//对肤色角度进行匹配
-        if(mask_tmp1<10)
-        {
+        if(mask_tmp1<10) {
             mask1[maskcount1]=mask[i];
             maskcount1++;
         }
         mask_tmp1=0;
     }
-    for(i=0;i<maskcount1;i++)
-    {
+    for(i=0;i<maskcount1;i++) {
         string m_tmp = GestureName[mask1[i]]+"anglechaName";
         filenode=cvGetFileNodeByName(fs,NULL,m_tmp.c_str ());
         cvReadRawData(fs,filenode,Sbanglecha,"f");
@@ -528,17 +488,14 @@ void CAIGesture::Recognise(IplImage* src, string &result)
     double vScale=0.7;
     int lineWidth=1;
     cvInitFont(&font,CV_FONT_HERSHEY_SIMPLEX|CV_FONT_ITALIC, hScale,vScale,0,lineWidth);//初始化字体，准备写到图片上的
-    if(maskcount==0||maskcount1==0)
-    {
+    if(maskcount==0||maskcount1==0) {
         cvReleaseFileStorage(&fs);
         return;
     }
     float angletmp=angleresult[0];
     int angletmp1=0;
-    for(i=0;i<maskcount1;i++)
-    {
-        if(angleresult[i]<=angletmp)
-        {
+    for(i=0;i<maskcount1;i++) {
+        if(angleresult[i]<=angletmp) {
             angletmp=angleresult[i];
             angletmp1=mask1[i];
         }
@@ -551,8 +508,7 @@ void CAIGesture::Recognise(IplImage* src, string &result)
 }
 
 //跟踪手势，CvBox2D这个结构里面有一个角度变量，可能以后会用到
-void CAIGesture::Follow(IplImage* src,CvRect& track_window,CvBox2D &track_box)
-{
+void CAIGesture::Follow(IplImage* src,CvRect& track_window,CvBox2D &track_box) {
     CvConnectedComp track_comp;
 
     IplImage* hsv=0;
@@ -615,8 +571,7 @@ void CAIGesture::Follow(IplImage* src,CvRect& track_window,CvBox2D &track_box)
                &track_comp, &track_box );
 
     //cvSetImageROI(mask,track_window);
-    if(cvCountNonZero(mask)<40)
-    {
+    if(cvCountNonZero(mask)<40) {
         cout << "Trace Failed !" << endl;
         cvReleaseImage(&hsv);
         cvReleaseImage(&h);
