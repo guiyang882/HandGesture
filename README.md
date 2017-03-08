@@ -4,8 +4,16 @@
 - 对于视频场景的前景与背景的建模方法
 
 ## Requirements
-- [OpenCV 2.4.13](http://opencv.org/downloads.html)
-- [QtCreater 4.0 && Qt 5.6](https://www.qt.io/download/)
+- [OpenCV 3.2.0](http://opencv.org/downloads.html)
+- [QtCreater Qt 5.6](https://www.qt.io/download/)
+- [CMake 2.8.0以上均可，关于CMakeLists.txt可以自行修改](https://cmake.org/cmake-tutorial/)
+
+## Run the Proj
+```bash
+cd bin/
+cmake ../
+make 
+```
 
 ## Skeleton Program
 - conf --> save configure.json file
